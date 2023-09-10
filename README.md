@@ -18,3 +18,9 @@ This project is not in any way affiliated with Polar or Polar Flow. It is purely
 hobby project created out of a need to export a large quantity of TCX files from 
 Polar Flow.
 """
+
+## Why fork
+
+The [original repo](https://github.com/gufastian/polar-flow-export) was no longer alive (long standing pull requests that got stale).
+The heavyy lifting was done one the original repo but I need a working version with some additional 
+features.
