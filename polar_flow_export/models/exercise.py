@@ -14,9 +14,13 @@ class Exercise(CalendarEvent):
             session_data_type_dir = store_dir.joinpath(session_data_type)
             session_data_type_dir.mkdir(mode=0o755, exist_ok=True)
             out_file = session_data_type_dir.joinpath(f"{self._get_datetime()}.{session_data_type}")
-            with open(out_file, 'w') as out_f:
-                response = url_opener(f"/api/export/training/{session_data_type}/{self.list_item_id}", None)
-                out_f.write(response.decode())
-            paths.append(out_file)
+            if out_file.exists():
+                self._report_export_already_exists(out_file)
+            else:
+                self._report_exporting(out_file)
+                with open(out_file, 'w') as out_f:
+                    response = url_opener(f"/api/export/training/{session_data_type}/{self.list_item_id}", None)
+                    out_f.write(response.decode())
+                paths.append(out_file)
         return paths
 

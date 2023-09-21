@@ -47,6 +47,14 @@ class CalendarEvent(object):
     def store(self, parent_dir: Path, url_opener: Callable[[str, Optional[Dict[str, Any]]], bytes]) -> List[str]:
         return [str(f) for f in self._store(parent_dir=parent_dir, url_opener=url_opener)]
 
+    @classmethod
+    def _report_export_already_exists(cls, export_file: Path):
+        print(f"Skipping {export_file} since export is already available.")
+
+    @classmethod
+    def _report_exporting(cls, export_file: Path):
+        print(f"Exporting {export_file}.")
+
 
 class CalendarEventTypes(Enum):
     EXERCISE = "EXERCISE"

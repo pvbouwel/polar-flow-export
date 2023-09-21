@@ -24,8 +24,6 @@ from urllib.parse import urlencode
 import dateutil.parser
 import json
 import logging
-import os
-import sys
 import time
 from html.parser import HTMLParser
 from urllib.request import BaseHandler, build_opener, HTTPCookieProcessor
@@ -80,8 +78,8 @@ class AjaxLoginParser(HTMLParser):
 
 class PolarFlowExporter(object):
 
-    def __init__(self, username: str, password: str):
-        self._username = username
+    def __init__(self, email: str, password: str):
+        self._username = email
         self._password = password
         self._logger = logging.getLogger(self.__class__.__name__)
 
@@ -95,7 +93,7 @@ class PolarFlowExporter(object):
 
         self._logger.debug(f"Requesting '{url}'")
 
-        if post_params != None:
+        if post_params is not None:
             post_data = urlencode(post_params).encode("utf-8")
         else:
             post_data = None
@@ -132,7 +130,7 @@ class PolarFlowExporter(object):
         # https://flow.polar.com/ajaxLogin?_=1694353061121
         #                                    1694353879
         csrf_token = self._get_csrf_token()
-          # Start a new session
+        # Start a new session
         self._execute_request(
             path='/login',
             post_params=dict(
@@ -145,19 +143,20 @@ class PolarFlowExporter(object):
         self._logged_in = True 
         self._logger.info("Successfully logged in")
 
-    def get_files(self, from_date_str, to_date_str, output_dir) -> List[str]:
+    def get_files(self, from_date: str, to_date: str, output_dir: Path) -> List[str]:
         """Returns an iterator of TcxFile objects.
 
-        @param from_date_str an ISO-8601 date string
-        @param to_date_str an ISO-8601 date string
+        @param from_date an ISO-8601 date string
+        @param to_date an ISO-8601 date string
+        @param output_dir
         """
         paths = []
-        self._logger.info("Fetching files from %s to %s", from_date_str, to_date_str)
+        self._logger.info("Fetching files from %s to %s", from_date, to_date)
         if not self._logged_in:
             self._login()
 
-        from_date = dateutil.parser.parse(from_date_str)
-        to_date = dateutil.parser.parse(to_date_str)
+        from_date = dateutil.parser.parse(from_date)
+        to_date = dateutil.parser.parse(to_date)
 
         from_spec = "%s.%s.%s" % (from_date.day, from_date.month, from_date.year)
 
@@ -173,21 +172,10 @@ class PolarFlowExporter(object):
         return paths
 
 
-if __name__ == '__main__':
-
+def export_data(email: str, password: str, from_date: str, to_date: str, output_dir: Path) -> None:
     logging.basicConfig(level=logging.INFO)
-    try:
-        (username, password, from_date_str, 
-            to_date_str, output_dir) = sys.argv[1:]
-    except ValueError:
-        prog_name = sys.argv[0]
-        sys.stderr.write(f"Usage: {prog_name}<username> <password> <from_date> <to_date> <output_dir>\n")
-        sys.exit(1)
-    
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-
-    exporter = PolarFlowExporter(username, password)
-    files = exporter.get_files(from_date_str, to_date_str, Path(output_dir))
-    print(f"Created files {', '.join(files)}")
+    exporter = PolarFlowExporter(email, password)
+    files = exporter.get_files(from_date, to_date, Path(output_dir))
+    if files:
+        print(f"Created files {', '.join(files)}")
     print("Export complete")
